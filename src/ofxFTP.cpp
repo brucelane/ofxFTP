@@ -6,6 +6,21 @@
 
 void ofxFTPServer::start(int port, string publish_dir, string username, string password)
 {
+
+#ifdef TARGET_WIN32
+
+	unsigned short vr;
+	WSADATA	wsaData;
+	vr = MAKEWORD(2,	2);
+	WSAStartup(vr, &wsaData);
+
+#else
+	//this disables the other apps from shutting down if the client
+	//or server disconnects.
+	signal(SIGPIPE,SIG_IGN);
+	signal(EPIPE,SIG_IGN);
+#endif
+
 	server.SetDataPortRange(10000, 12000);
 	server.SetCheckPassDelay(500);
 	server.EnableFXP(true);
@@ -18,6 +33,8 @@ void ofxFTPServer::start(int port, string publish_dir, string username, string p
 						CFtpServer::LIST | CFtpServer::DELETEFILE | CFtpServer::CREATEDIR |
 						CFtpServer::DELETEDIR);
 	
+	// If you only want to listen on the TCP Loopback interface,
+	// replace 'INNADDR_ANY' by 'inet_addr("127.0.0.1")'.
 	if (server.StartListening(INADDR_ANY, port))
 	{
 		if (!server.StartAccepting())
