@@ -198,7 +198,7 @@ int ofxFTPClient::getToOf(string fileName, string localFolder, string remoteFold
 	}
 }
 
-int ofxFTPClient::send(string local, string remote, bool is_binary)
+int ofxFTPClient::send(string fileName, string localFolder, string remoteFolder)
 {
 	if( bSetup == false ){
 		if( bVerbose )printf("error - you need to call setup first\n");
@@ -206,27 +206,53 @@ int ofxFTPClient::send(string local, string remote, bool is_binary)
 	}
 
 	int numBytes = 0;
-	try
-	{
+
+	try{
 		startFtpSesssion();
 
-		ostream& ftpOStream = ftpClient->beginUpload(remote.c_str());
+		if( bVerbose )printf("ftp-ing %s\n", fileName.c_str());
 
-		Poco::Net::FTPClientSession::FileType type = Poco::Net::FTPClientSession::TYPE_TEXT;
-		if (is_binary) type = Poco::Net::FTPClientSession::TYPE_BINARY;
+		//localFolder = ofToDataPath( localFolder );
 
-		ftpClient->setFileType(type);
+		//add slashes if they don't exist
+		if(localFolder.length() > 0){
+			if( localFolder[localFolder.length()-1] != '/' ){
+				localFolder += "/";
+			}
+		}
 
-		ifstream localIFStream(local.c_str(), ifstream::in | ifstream::binary);
+		if(remoteFolder.length() > 0){
+			if( remoteFolder[remoteFolder.length()-1] != '/' ){
+				remoteFolder += "/";
+			}
+		}
+
+		string localPath    = localFolder  + fileName;
+		string remotePath   = remoteFolder + fileName;
+
+		ostringstream remoteOSS;
+		remoteOSS << remoteFolder << fileName;
+
+		if( bVerbose )printf("localpath is %s\n remotepath is %s\n", localPath.c_str(), remotePath.c_str());
+
+		ftpClient->setFileType(Poco::Net::FTPClientSession::TYPE_BINARY);
+
+		ostream& ftpOStream = ftpClient->beginUpload(remoteOSS.str().c_str());  //how to make it overwrite?
+
+		ifstream localIFStream(localPath.c_str(), ifstream::in | ifstream::binary);
 		numBytes = Poco::StreamCopier::copyStream(localIFStream, ftpOStream);
-
 		ftpClient->endUpload();
 
 		endFtpSession();
+
+		if(bVerbose)printf("uploaded %i bytes\n\n", numBytes);
+
+		return numBytes;
+
 	}
 	catch ( Poco::Net::FTPException& e)
 	{
-		cout << e.displayText() << endl;
+		cout<< e.displayText() <<endl;
 		return -1;
 	}
 	catch (Poco::Exception& exc)
@@ -239,7 +265,7 @@ int ofxFTPClient::send(string local, string remote, bool is_binary)
 
 }
 
-int ofxFTPClient::get(string remote, string local, bool is_binary)
+int ofxFTPClient::get(string fileName, string localFolder, string remoteFolder)
 {
 	if( bSetup == false ){
 		if( bVerbose )printf("error - you need to call setup first\n");
@@ -247,36 +273,58 @@ int ofxFTPClient::get(string remote, string local, bool is_binary)
 	}
 
 	int numBytes = 0;
-	try
-	{
+
+	try{
 		startFtpSesssion();
 
-		istream& ftpOStream = ftpClient->beginDownload(remote.c_str());
+		if( bVerbose )printf("ftp-ing %s\n", fileName.c_str());
 
-		Poco::Net::FTPClientSession::FileType type = Poco::Net::FTPClientSession::TYPE_TEXT;
-		if (is_binary) type = Poco::Net::FTPClientSession::TYPE_BINARY;
+		//localFolder = ofToDataPath( localFolder );
 
-		ftpClient->setFileType(type);
+		//add slashes if they don't exist
+		if(localFolder.length() > 0){
+			if( localFolder[localFolder.length()-1] != '/' ){
+				localFolder += "/";
+			}
+		}
 
-		ofstream localIFStream(local.c_str(), ifstream::out | ifstream::binary);
+		if(remoteFolder.length() > 0){
+			if( remoteFolder[remoteFolder.length()-1] != '/' ){
+				remoteFolder += "/";
+			}
+		}
+
+		string localPath    = localFolder  + fileName;
+		string remotePath   = remoteFolder + fileName;
+
+		ostringstream remoteOSS;
+		remoteOSS << remoteFolder << fileName;
+
+		if( bVerbose )printf("localpath is %s\n remotepath is %s\n", localPath.c_str(), remotePath.c_str());
+
+		ftpClient->setFileType(Poco::Net::FTPClientSession::TYPE_BINARY);
+		istream& ftpOStream = ftpClient->beginDownload(remoteOSS.str().c_str());
+
+		ofstream localIFStream(localPath.c_str(), ifstream::out | ifstream::binary);
 		numBytes = Poco::StreamCopier::copyStream(ftpOStream, localIFStream);
-
 		ftpClient->endDownload();
-
 		endFtpSession();
+
+		if(bVerbose)printf("downloaded %i bytes\n\n", numBytes);
+
+		return numBytes;
+
 	}
 	catch ( Poco::Net::FTPException& e)
 	{
 		cout << e.displayText() << endl;
-		return numBytes;
+		return -1;
 	}
 	catch (Poco::Exception& exc)
 	{
 		cout << exc.displayText() << endl;
 		return -1;
 	}
-
-	return numBytes;
 }
 
 vector<string> ofxFTPClient::list(string path)

@@ -25,11 +25,12 @@ public:
 	void setup(string _host, int _port = 21, string username = "anonymous", string password = "");
 
 	int sendFromOf(string fileName, string localFolder/*data-path*/, string remoteFolder);
-	int send(string local, string remote, bool is_binary = false);
+	int send(string fileName, string localFolder, string remoteFolder);
 	int getToOf(string fileName, string localFolder/*data-path*/, string remoteFolder);
-	int get(string remote, string local, bool is_binary = false);
+	int get(string fileName, string localFolder, string remoteFolder);
 
 	vector<string> list(string path);
+	void setPASV(bool p){pasv = p;}
 	void setVerbose(bool verbose);
 
 private:
@@ -38,6 +39,7 @@ private:
         endFtpSession();		
         ftpClient = new Poco::Net::FTPClientSession(host, port);
 		ftpClient->login(user, pass);
+		ftpClient->setPassive(pasv);
     }
     
     //------------------------------------------------------------
@@ -55,5 +57,6 @@ private:
     string user, host, pass;
     int port;
     bool bSetup;
+	bool pasv;
 	
 };
