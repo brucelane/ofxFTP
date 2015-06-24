@@ -2,21 +2,9 @@
 
 #include "ofMain.h"
 
-#include "CFtpServer.h"
 #include "Poco/Net/FTPClientSession.h"
 #include "Poco/StreamCopier.h"
 #include "Poco/Net/NetException.h"
-
-class ofxFTPServer
-{
-public:
-	
-	void start(int port, string publish_dir = "", string username = "anonymous", string password = "");
-	
-private:
-	CFtpServer server;
-};
-
 
 class ofxFTPClient
 {
