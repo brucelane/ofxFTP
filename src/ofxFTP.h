@@ -46,5 +46,5 @@ private:
     int port;
     bool bSetup;
 	bool pasv;
-	
+
 };

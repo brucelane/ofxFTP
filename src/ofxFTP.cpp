@@ -22,8 +22,6 @@ void ofxFTPClient::setup(string _host, int _port, string username, string passwo
     bSetup  = true;
 }
 
-
-
 int ofxFTPClient::sendFromOf(string fileName, string localFolder, string remoteFolder)
 {
 	if( bSetup == false ){
